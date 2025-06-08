@@ -6,6 +6,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const socket: Socket = io(process.env.IP_ADDRESS + ":3005", {
+export const socket: Socket = io("http://localhost:3005/ws", {
   transports: ["websocket"],
 });

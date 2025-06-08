@@ -2,7 +2,7 @@
 
 import { socket } from "@/lib/utils";
 import { Cloud } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button, buttonVariants } from "./ui/button";
 
@@ -12,6 +12,7 @@ const Upload = () => {
     current: 0,
     total: 0,
   });
+  const wsRef = useRef<WebSocket | null>(null);
   const onDrop = useCallback((acceptedFiles: File[]) => {
     acceptedFiles.forEach((file: File) => {
       const reader = new FileReader();
@@ -27,15 +28,31 @@ const Upload = () => {
     onDrop,
   });
 
-  useEffect(() => {
-    socket.connect();
+  function connect() {
+    const ws = new WebSocket("ws://localhost:3005/ws");
 
-    socket.on("connect", () => {});
+    wsRef.current = ws;
 
-    return () => {
-      socket.off("connect");
-      socket.disconnect();
+    ws.onopen = function () {
+      console.log("Connected to WebSocket server");
     };
+
+    ws.onmessage = function (event) {
+      console.log(event.data);
+    };
+
+    ws.onclose = function () {
+      console.log("WebSocket connection closed, retrying...");
+      setTimeout(connect, 1000); // Reconnect after 1 second
+    };
+
+    ws.onerror = function (error) {
+      console.error("WebSocket error:", error);
+    };
+  }
+
+  useEffect(() => {
+    connect();
   }, []);
 
   const receivedFiles = new Map();
@@ -149,10 +166,24 @@ const Upload = () => {
             {file.name}
           </p>
         ))}
-      <p>{sending && `${data.current / (1024 * 1024)} out of ${data.total / (1024 * 1024)}`}</p>
+      <p>
+        {sending &&
+          `${data.current / (1024 * 1024)} out of ${data.total / (1024 * 1024)}`}
+      </p>
+
       <Button
         className="w-full max-w-[300px]"
-        onClick={handleSend}
+        onClick={async () => {
+          const file = acceptedFiles[0];
+          wsRef.current?.send(
+            JSON.stringify({
+              name: file.name,
+              fileType: file.type,
+              size: file.size,
+            }),
+          );
+          wsRef.current?.send(await file.arrayBuffer());
+        }}
         disabled={sending}
       >
         Send
