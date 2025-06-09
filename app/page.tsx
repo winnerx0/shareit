@@ -2,6 +2,7 @@ import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 
 const page = () => {
+	
   return (
     <div className="h-screen pt-24 px-2">
       <div className="flex flex-col gap-4 items-center justify-center h-[400px] ">

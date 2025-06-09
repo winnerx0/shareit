@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  node-app:
+    build: './node-app'
+    ports:
+      - 3000:3000
+  
+  go-app:
+    build: './go-app'
+    ports:
+      - 3005:3005

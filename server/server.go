@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-
 	"github.com/gorilla/websocket"
 )
 
@@ -34,7 +33,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	defer conn.Close()
 
 	for {
-
+		
 		_, fileMetaData, err := conn.ReadMessage()
 
 		if err != nil {
@@ -74,11 +73,16 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		
 		fmt.Println("Sent")
+		
+		conn.WriteMessage(websocket.TextMessage, []byte("Sent"))
+
 	}
 }
 
 func main() {
+
 
 	http.HandleFunc("/ws", wsHandler)
 
