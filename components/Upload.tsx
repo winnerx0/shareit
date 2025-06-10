@@ -24,7 +24,7 @@ const Upload = () => {
   });
 
   function connect() {
-    const ws = new WebSocket("ws://localhost:3005/ws");
+    const ws = new WebSocket("ws://192.168.225.218:3005/ws");
 
     wsRef.current = ws;
 
@@ -32,9 +32,34 @@ const Upload = () => {
       console.log("Connected to WebSocket server");
     };
 
-    ws.onmessage = function (event) {
-      console.log(event.data);
+    let fileName = "download.bin"; // fallback
+    
+    ws.onmessage = async function (event) {
+      if (typeof event.data === "string") {
+        try {
+          const message = JSON.parse(event.data);
+          console.log(message)
+          if (message.name) {
+            fileName = message.name;
+            console.log(fileName)
+          }
+        } catch (e) {
+          console.log("Invalid JSON message:", event.data);
+        }
+      } else if (event.data instanceof Blob) {
+        const a = document.createElement("a");
+        const url = URL.createObjectURL(event.data);
+        a.href = url;
+        a.download = fileName;
+        a.click();
+    
+        URL.revokeObjectURL(url);
+        console.log("Downloaded:", fileName);
+      } else {
+        console.log("Unknown message type", event.data);
+      }
     };
+
 
     ws.onclose = function () {
       console.log("WebSocket connection closed, retrying...");
@@ -42,7 +67,8 @@ const Upload = () => {
     };
 
     ws.onerror = function (error) {
-      console.error("WebSocket error:", error);
+      setSending(false);
+      console.log("WebSocket error:", error);
     };
   }
 
@@ -84,27 +110,26 @@ const Upload = () => {
         className="w-full max-w-[300px]"
         onClick={async () => {
           if (!wsRef.current || sending) return;
-        
+
           setSending(true);
-        
+
           for (const file of acceptedFiles) {
-            wsRef.current.send(
+            wsRef.current?.send(
               JSON.stringify({
                 name: file.name,
                 fileType: file.type,
                 size: file.size,
-              })
+              }),
             );
-        
+
             await new Promise((res) => setTimeout(res, 100));
-        
+
             const buffer = await file.arrayBuffer();
-            wsRef.current.send(buffer);
+            wsRef.current?.send(buffer);
           }
-        
+
           setSending(false);
         }}
-
         disabled={sending}
       >
         Send
