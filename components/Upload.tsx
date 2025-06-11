@@ -24,7 +24,7 @@ const Upload = () => {
   });
 
   function connect() {
-    const ws = new WebSocket("ws://192.168.225.218:3005/ws");
+    const ws = new WebSocket("ws://192.168.90.122:3005/ws");
 
     wsRef.current = ws;
 

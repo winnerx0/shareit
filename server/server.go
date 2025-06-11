@@ -83,17 +83,12 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("Error reading file ", err)
 			return
 		}
-
-		if err != nil {
-			fmt.Println("Error writing file ", err)
-			return
-		}
-
+		
 		fmt.Println("Sent")
 
 		for _, client := range c.clients {
 			if client == conn {
-				return
+				continue
 			}
 			client.WriteMessage(websocket.TextMessage, fileMetaData)
 
@@ -110,7 +105,7 @@ func main() {
 
 	fmt.Println("Lisening to port 3005")
 
-	err := http.ListenAndServe("192.168.225.218:3005", nil)
+	err := http.ListenAndServe("192.168.90.122:3005", nil)
 	if err != nil {
 		fmt.Println("Error starting server:", err)
 	}
