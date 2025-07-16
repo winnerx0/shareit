@@ -23,8 +23,9 @@ const Upload = () => {
     onDrop,
   });
 
-  function connect() {
-    const ws = new WebSocket("ws://192.168.90.122:3005/ws");
+  const connect = useCallback(() => {
+
+    const ws = new WebSocket("ws://172.20.10.4:3005/ws");
 
     wsRef.current = ws;
 
@@ -70,11 +71,12 @@ const Upload = () => {
       setSending(false);
       console.log("WebSocket error:", error);
     };
-  }
+
+  }, [])
 
   useEffect(() => {
     connect();
-  }, []);
+  }, [connect]);
 
   return (
     <div className="flex flex-col items-center justify-center gap-4 h-full">

@@ -105,7 +105,7 @@ func main() {
 
 	fmt.Println("Lisening to port 3005")
 
-	err := http.ListenAndServe("192.168.90.122:3005", nil)
+	err := http.ListenAndServe("172.20.10.4:3005", nil)
 	if err != nil {
 		fmt.Println("Error starting server:", err)
 	}
