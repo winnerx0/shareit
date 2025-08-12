@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -28,13 +30,13 @@ func (c *Clients) Add(conn *websocket.Conn) {
 }
 
 func (c *Clients) Remove(conn *websocket.Conn) {
-	var newClients Clients;
+	var newClients Clients
 	for _, k := range c.clients {
 		if k == conn {
 			continue
 		}
 		c.clients = append(newClients.clients, k)
-		
+
 	}
 }
 
@@ -83,7 +85,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("Error reading file ", err)
 			return
 		}
-		
+
 		fmt.Println("Sent")
 
 		for _, client := range c.clients {
@@ -105,7 +107,7 @@ func main() {
 
 	fmt.Println("Lisening to port 3005")
 
-	err := http.ListenAndServe("172.20.10.4:3005", nil)
+	err := http.ListenAndServe(os.Getenv("IP_ADDRESS")+":3005", nil)
 	if err != nil {
 		fmt.Println("Error starting server:", err)
 	}

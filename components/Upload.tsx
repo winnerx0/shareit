@@ -7,6 +7,7 @@ import { Button, buttonVariants } from "./ui/button";
 
 const Upload = () => {
   const [sending, setSending] = useState<boolean>(false);
+  const [receiving, setReceiving] = useState<boolean>(false);
   const wsRef = useRef<WebSocket | null>(null);
   const onDrop = useCallback((acceptedFiles: File[]) => {
     acceptedFiles.forEach((file: File) => {
@@ -24,7 +25,6 @@ const Upload = () => {
   });
 
   const connect = useCallback(() => {
-
     const ws = new WebSocket("ws://172.20.10.4:3005/ws");
 
     wsRef.current = ws;
@@ -34,18 +34,22 @@ const Upload = () => {
     };
 
     let fileName = "download.bin"; // fallback
+
     
+    console.log(receiving, sending);
     ws.onmessage = async function (event) {
+      setReceiving(true);
       if (typeof event.data === "string") {
         try {
           const message = JSON.parse(event.data);
-          console.log(message)
+          console.log(message);
           if (message.name) {
             fileName = message.name;
-            console.log(fileName)
+            console.log(fileName);
           }
         } catch (e) {
           console.log("Invalid JSON message:", event.data);
+          console.log("error ", e);
         }
       } else if (event.data instanceof Blob) {
         const a = document.createElement("a");
@@ -53,14 +57,14 @@ const Upload = () => {
         a.href = url;
         a.download = fileName;
         a.click();
-    
+
         URL.revokeObjectURL(url);
         console.log("Downloaded:", fileName);
       } else {
         console.log("Unknown message type", event.data);
       }
+      setReceiving(false);
     };
-
 
     ws.onclose = function () {
       console.log("WebSocket connection closed, retrying...");
@@ -69,10 +73,10 @@ const Upload = () => {
 
     ws.onerror = function (error) {
       setSending(false);
+      setReceiving(false);
       console.log("WebSocket error:", error);
     };
-
-  }, [])
+  }, [receiving, sending]);
 
   useEffect(() => {
     connect();
@@ -80,13 +84,14 @@ const Upload = () => {
 
   return (
     <div className="flex flex-col items-center justify-center gap-4 h-full">
+    
       {/* <p className="text-xl">
-        {sending && socket.id === receiver
+        {sending && wsRef.current?. === receiver
           ? "Receiving..."
           : sending && socket.id !== receiver
           ? "Sending..."
           : ""}
-      </p> */}
+      </p>  */}
       <div
         {...getRootProps()}
         className={buttonVariants({
@@ -99,15 +104,18 @@ const Upload = () => {
         <Cloud className="size-10" />
         <p className="text-sm text-wrap">Click or Drag n Drop To Upload</p>
       </div>
-      {acceptedFiles.length > 0 &&
-        acceptedFiles.map((file, index) => (
-          <p
-            className="text-wrap max-w-[300px] text-center text-sm"
-            key={index}
-          >
-            {file.name}
-          </p>
-        ))}
+      {acceptedFiles.length > 0 && (
+        <div className="flex flex-col gap-2 border rounded-md py-2">
+          {acceptedFiles.map((file, index) => (
+            <p
+              className="text-wrap max-w-[300px] text-center text-[10px]"
+              key={index}
+            >
+              {file.name}
+            </p>
+          ))}
+        </div>
+      )}
       <Button
         className="w-full max-w-[300px]"
         onClick={async () => {
@@ -121,7 +129,7 @@ const Upload = () => {
                 name: file.name,
                 fileType: file.type,
                 size: file.size,
-              }),
+              })
             );
 
             await new Promise((res) => setTimeout(res, 100));
@@ -132,9 +140,11 @@ const Upload = () => {
 
           setSending(false);
         }}
-        disabled={sending}
+        disabled={sending || receiving}
       >
-        Send
+        {
+          receiving ? "Receiving..." : sending ? "Sending..." : "Send"
+        }
       </Button>
     </div>
   );
